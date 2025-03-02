@@ -95,8 +95,9 @@ image:fstab.png[]
 // Do this before hardening via dev-sec, otherwise they'll be locked out.
 Run `ssh-keygen` on your local computer/PC, use the default location unless you already have an SSH key there (in that case, put it elsewhere and remember it), then set the passphrase to something moderately complex using a password manager like Bitwarden. I recommend at least 30 characters long, lower & upper case characters with numbers, and no symbols.
 
-* Include `-i /DIRECTORY/TO/YOUR_FILE` if you put a custom location and/or name: +
+* Include `-i /DIRECTORY/TO/YOUR/id_ed25519.pub` if you put a custom location and/or name (i.e. not id_ed25519.pub or id_rsa.pub): +
 `ssh-copy-id -p YOUR_SSH_PORT server@YOUR_SERVER_IP`
+- On Windows, use PowerShell and do this instead: `type C:\$Env:UserName\.ssh\id_ed25519.pub | ssh -p YOUR_SSH_PORT server@YOUR_SERVER_IP 'cat >> ~/.ssh/authorized_keys'`
 
 * Check on the server to see if your key was installed successfully: +
 `cat ~/.ssh/authorized_keys`
