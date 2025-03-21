@@ -10,11 +10,9 @@ ifdef::env-github[]
 endif::[]
 
 == About
-This is a minimalist Debian 12 (preferred) or Ubuntu Server seedbox setup that is oriented around fast and stable seeding, for both private and public trackers. It also covers optionally setting up qBittorent and Plex through a VPN.
+This is a minimalist Debian 12 (preferred) or Ubuntu Server seedbox setup that is oriented around fast and stable seeding, for both private and public trackers. Optionally, setting up qBittorent and Plex through a VPN is covered.
 
-It is bare-metal, not using any Dockers, so networking performance for 10gbit servers doesn't suffer.
-
-This guide has a lot of security measures / hardening done, so have patience when working through this guide.
+It is bare-metal, not using any Dockers, so networking performance for 10gbit servers doesn't suffer, and it is also hardened to CIS level 1 for servers.
 
 .Buying a server
 [%collapsible]
@@ -78,7 +76,7 @@ TIP: *irqbalance* balances interrupts across CPU cores to handle high load more 
 . You have to make an Ubuntu account to use Ubuntu Pro's functionality: +
 `sudo ua attach`
 
-*For Debian:* You can https://tuxcare.com/blog/how-to-try-or-purchase-kernelcare-2-different-ways/[purchase KernelCare+] for $5.95 per server per month or $71 per server per year, it also hotpatches glibc and OpenSSL, which Ubuntu Pro doesn't cover.
+*For Debian:* I don't recommend this, but you can https://tuxcare.com/blog/how-to-try-or-purchase-kernelcare-2-different-ways/[purchase KernelCare+] for $5.95 per server per month or $71 per server per year. KernelCare+ also hotpatches glibc and OpenSSL, which Ubuntu Pro doesn't cover.
 
 
 *For Debian:* +
@@ -107,36 +105,39 @@ Run `ssh-keygen` on your local computer/PC, use the default location unless you 
 
 * Login with only the SSH key for the 'server' user, and if it works, proceed with the next hardening step.
 
-Install what we'll use to automatically harden lots of settings relating to SQL, nginx, Linux, and SSH; note that for Debian 12 this will take a really long time, while on Ubuntu it's fast: +
-`sudo ansible-galaxy collection install -U devsec.hardening --force -vvv`
-
-Edit: `~/harden.yaml`; change the SSH server port to what you forwarded for your VPN if applicable:
-```yaml
-- name: Do hardening via dev-sec's collection
-  hosts: localhost
-  roles:
-    - devsec.hardening.os_hardening
-    - devsec.hardening.ssh_hardening
-  vars:
-    - ssh_server_ports: ["55820"]
-```
-
 .Setup the firewall:
-- `sudo ufw allow YOUR_SSH_PORT`
+- `sudo ufw allow ssh`
 - `sudo ufw allow https`
 
-Now we automatically harden: +
-`sudo ansible-playbook ~/harden.yaml`
+Complete the firewall setup: +
+`sudo ufw default deny incoming && sudo ufw default allow outgoing && sudo ufw enable`
 
-Complete the firewall setup; this will kick you out of the SSH session, relogin in with the new SSH port. +
-`sudo ufw default deny incoming; sudo ufw default allow outgoing; sudo ufw enable`
+Install what we'll use to automatically harden: +
+`sudo ansible-galaxy install git+https://github.com/ansible-lockdown/DEBIAN12-CIS.git` +
+or `sudo ansible-galaxy install git+https://github.com/ansible-lockdown/UBUNTU24-CIS`
+
+Edit: `~/harden.yml`; use UBUNTU24-CIS instead if applicable:
+```yaml
+- name: CIS level 1 server hardening
+  hosts: localhost
+  roles:
+    - role: DEBIAN12-CIS
+      tags:
+        - level1-server
+```
+
+Now we automatically harden: +
+`sudo ansible-playbook ~/harden.yml`
+
+NOTE: If it freezes at configuring https://en.wikipedia.org/wiki/Advanced_Intrusion_Detection_Environment[AIDE], press kbd:[Ctrl + c] to exit out of ansible-playbook then run: `sudo ansible-playbook ~/harden.yml --skip-tags "aide"`
+
+TIP: You can optionally edit the `Port` from `/etc/ssh/sshd_config` if you plan to hide your server behind a VPN for Plex or public tracker usage. +
+Be sure to run `sudo ufw allow YOUR_CUSTOM_SSH_PORT`, such as `sudo ufw allow 44718`.
 
 Sudo edit `/etc/default/grub`:
 
 * Remove `nomodeset` to allow the Intel iGPU to run, which is desirable for Plex, Emby, or Jellyfin.
 ** Also run: `sudo sed -i 's/^blacklist i915/#&/' /etc/modprobe.d/blacklist-hetzner.conf`
-
-* Add `transparent_hugepage=never numa_balancing=disable` to `GRUB_CMDLINE_LINUX_DEFAULT`, this aids in maintaining low networking latency.
 
 * Add the kernel command line options from the https://kernsec.org/wiki/index.php/Kernel_Self_Protection_Project/Recommended_Settings#kernel_command_line_options[Kernel Self Protection Project], and include the x86_64 options too. I would recommend using the "slow" options at first, to see if your server can handle it.
 
@@ -227,7 +228,7 @@ If you want Plex though, run `sudo box install plex`
 ====
 
 Use libtorrent v1.2.x instead of v2, as v2 has issues with disk performance / caching. +
-`sudo -i`
+`$ sudo -i` +
 `# export libtorrent_github_tag=RC_1_2`
 
 Retreive then run Swizzin: +
@@ -236,7 +237,7 @@ Retreive then run Swizzin: +
 .Through Swizzin, install the following:
 * panel
 * nginx
-* qbittorrent -> 4.3.9 or 4.6.5 depending on your preferences
+* qbittorrent -> 4.3.9 or 5.0.4 depending on your preferences
 * plex (only if you're streaming movies / TV shows)
 
 See https://swizzin.ltd/getting-started/box-basics[here] for how to interact with Swizzin after its installation.
@@ -249,7 +250,7 @@ Exit the root user: +
 ====
 
 // fail2ban is done after nginx is installed so it doesn't error on [nginx-http-auth].
-The following steps are required to make fail2ban work: +
+The following steps are required to make fail2ban work; used for anti-bruteforcing of our SSH and Nginx servers: +
 `echo "sshd_backend = systemd" | sudo tee -a /etc/fail2ban/paths-debian.conf`
 
 Sudo edit `/etc/fail2ban/fail2ban.local`: +
@@ -319,7 +320,7 @@ Click the Gear icon to go into the settings.
 - Peer connection protocol: TCP
 - Use UPnP / NAT-PMP port forwarding from my router: ON
 - Uncheck all under Connections Limits!
-- `sudo ufw allow PORT_FOR_INCOMING_CONNECTIONS`
+- `sudo ufw allow YOUR_PORT_FOR_INCOMING_CONNECTIONS`
 
 .*BitTorrent*
 - Encryption mode: Allow encryption
@@ -418,7 +419,7 @@ WARNING: This will slow down 10gbit servers to around 1.2gbit.
 [%collapsible]
 ====
 
-Here we're going to use https://airvpn.org/?referred_by=224244[AirVPN] (referral link, thank you if you use it); their servers are reliable, fast, and support port forwarding which is a requirement. I've personally used them since 2016, and struggled to find better VPNs, especially when needing port forwarding.
+Here we're going to use https://airvpn.org[AirVPN]; their servers are reliable, fast, and support port forwarding which is a requirement. I've personally used them since 2016, and struggled to find better VPNs when needing port forwarding.
 
 `sudo ufw route allow in on wg0; sudo ufw allow 1637/udp`
 
