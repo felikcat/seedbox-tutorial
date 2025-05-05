@@ -53,7 +53,7 @@ Login to 'server' and test if sudo works (it should output -> root): +
 
 The 'server' user is now going to be used instead of using 'root' directly.
 
-TIP: If you're using a laptop as a server, set `HandleLidSwitchExternalPower=ignore` in `/etc/systemd/login.conf`. +
+TIP: If you're using a laptop as a server, set `HandleLidSwitchExternalPower=ignore` in `/etc/systemd/logind.conf`; you can optionally set the other `HandleLidSwitch` options to `ignore` as well in case it's running temporarily off the battery during a power outage or other event. +
 Then run: `sudo systemctl restart systemd-logind`
 
 Remove Hetzner repositories, as it can make the OS lag behind in package updates, which is bad for security: +
@@ -69,7 +69,7 @@ TIP: *irqbalance* balances interrupts across CPU cores to handle high load more 
 *Fail2ban* is to make bruteforce password attacks on SSH and your web server (nginx) much more difficult. +
 *apt-transport-https* is to allow apt to operate over HTTPS to prevent security flaws such as https://justi.cz/security/2019/01/22/apt-rce.html[RCEs].
 
-`sudo apt update && sudo apt install irqbalance apparmor apparmor-utils auditd apparmor-notify unattended-upgrades apt-listchanges ufw fail2ban python3-systemd apt-transport-https ansible`
+`sudo apt update && sudo apt install irqbalance apparmor apparmor-utils auditd apparmor-notify unattended-upgrades apt-listchanges ufw fail2ban python3-systemd apt-transport-https ansible git`
 
 .*For Ubuntu:* Setting up kernel hotpatching support; to update the kernel automatically without rebooting.
 . `sudo apt install ubuntu-advantage-tools`
