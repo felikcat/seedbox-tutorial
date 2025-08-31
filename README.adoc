@@ -87,6 +87,9 @@ NOTE: If bookworm-backports is not there, use this: +
 `deb https://deb.debian.org/debian bookworm-backports main contrib non-free-firmware` +
 Then run `sudo apt update`.
 
+Ensure security updates are automatically downloaded and installed: +
+`dpkg-reconfigure unattended-upgrades`
+
 Sudo edit `/etc/fstab` and add "noatime" to the XFS partition: +
 image:fstab.png[]
 
