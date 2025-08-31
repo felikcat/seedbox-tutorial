@@ -17,7 +17,9 @@ It is bare-metal, not using any Dockers, so networking performance for 10gbit se
 .Buying a server
 [%collapsible]
 ====
-Hetzner's https://www.hetzner.com/sb/#cpuType=Intel&additional=iNIC&location=FSN[Auction House dedicated servers] are preferred as it provides the best value; you get powerful hardware, a truly unlimited 1gbps line that is shared with nobody else, and good peering/routing.
+For public (no VPN) and private trackers: https://hostingby.design/dedi-lsw-nl/[HBD's Leaseweb Netherlands] is your best bet.
+
+For private trackers (can be used on public trackers with a VPN): Hetzner's https://www.hetzner.com/sb/#cpuType=Intel&additional=iNIC&location=FSN[Auction House dedicated servers] are preferred as it provides the best value; you get powerful hardware, a truly unlimited 1gbps line that is shared with nobody else, and good peering/routing.
 
 For Hetzner, be sure to select an Intel CPU as it has an iGPU, which is useful for Plex, Emby, or Jellyfin; avoid Xeons, they have worse IPC which will impact libtorrent's performance -- the most critical part of qBittorrent, as it's effectively an interface for libttorrent.
 
@@ -76,15 +78,14 @@ TIP: *irqbalance* balances interrupts across CPU cores to handle high load more 
 . You have to make an Ubuntu account to use Ubuntu Pro's functionality: +
 `sudo ua attach`
 
-*For Debian:* I don't recommend this, but you can https://tuxcare.com/blog/how-to-try-or-purchase-kernelcare-2-different-ways/[purchase KernelCare+] for $5.95 per server per month or $71 per server per year. KernelCare+ also hotpatches glibc and OpenSSL, which Ubuntu Pro doesn't cover.
+*For Debian:* I don't recommend this due to cost, but you can https://tuxcare.com/blog/how-to-try-or-purchase-kernelcare-2-different-ways/[purchase KernelCare+ Enterprise with LibCare] for $5.95 per server per month or $71 per server per year. KernelCare+ also hotpatches glibc and OpenSSL, which Ubuntu Pro doesn't cover.
 
 
 *For Debian:* +
-Sudo edit `/etc/apt/sources.list` and change `http://` to `https://`, also enable the backports repository: +
-image:apt https.png[]
+Enforce the repositories to use HTTPS by running: `sudo sed -i 's/http:\/\//https:\/\//g' /etc/apt/sources.list` +
+Add the Debian backports repository: +
+`echo "deb https://deb.debian.org/debian bookworm-backports main contrib non-free-firmware" | sudo tee /etc/apt/sources.list.d/bookworm-backports.list`
 
-NOTE: If bookworm-backports is not there, use this: +
-`deb https://deb.debian.org/debian bookworm-backports main contrib non-free-firmware` +
 Then run `sudo apt update`.
 
 Ensure security updates are automatically downloaded and installed: +
@@ -240,7 +241,7 @@ Retreive then run Swizzin: +
 .Through Swizzin, install the following:
 * panel
 * nginx
-* qbittorrent -> 4.3.9 or 5.0.4 depending on your preferences
+* qbittorrent -> use the latest version
 * plex (only if you're streaming movies / TV shows)
 
 See https://swizzin.ltd/getting-started/box-basics[here] for how to interact with Swizzin after its installation.
@@ -273,7 +274,7 @@ Sudo edit `/etc/fail2ban/jail.local`: +
 ```
 [sshd]
 enabled = true
-port = YOUR_SSH_PORT
+port = YOUR_SSH_PORT_LIKELY_22
 
 [nginx-http-auth]
 enabled = true
@@ -309,7 +310,7 @@ Restart the server to apply our GRUB and sysctl changes: +
 `sudo systemctl reboot`
 
 == 2. Setting up qBittorrent
-Open the Swizzin panel, which should be on the root of your IP such as https://EXAMPLE_IP.
+Open the Swizzin panel, which should be on the root of your IP such as https://EXAMPLE_EXTERNAL_IP.
 
 Click the Gear icon to go into the settings.
 
