@@ -147,7 +147,7 @@ NOTE: You can try your luck at configuring https://en.wikipedia.org/wiki/Advance
 . Add the kernel command line options from the https://kernsec.org/wiki/index.php/Kernel_Self_Protection_Project/Recommended_Settings#kernel_command_line_options[Kernel Self Protection Project], and include the x86_64 options too. I would recommend using the "slow" options at first, to see if your server can handle it.
 
 - To make it easy (please check the KSPP link and compare): +
-`hardened_usercopy=1 init_on_alloc=1 init_on_free=1 randomize_kstack_offset=on page_alloc.shuffle=1 slab_nomerge pti=on nosmt iommu.passthrough=0 iommu.strict=1 mitigations=auto,nosmt vsyscall=none vdso32=0 cfi=kcfi`
+`hardened_usercopy=1 init_on_alloc=1 init_on_free=1 randomize_kstack_offset=on page_alloc.shuffle=1 slab_nomerge pti=on iommu.passthrough=0 iommu.strict=1 mitigations=auto vsyscall=none vdso32=0 cfi=kcfi`
 
 . Generate the new boot configuration: +
 `sudo grub-mkconfig -o /boot/grub/grub.cfg`
