@@ -10,7 +10,7 @@ ifdef::env-github[]
 endif::[]
 
 == About
-This is a minimalist Debian 12 (preferred) or Ubuntu Server seedbox setup that is oriented around fast and stable seeding, for both private and public trackers. Optionally, setting up qBittorent and Plex through a VPN is covered.
+This is a minimalist Debian 12 (preferred) or Ubuntu Server seedbox setup that is oriented around fast and stable seeding, for both private and public trackers. Optionally, setting up qBittorent and Jellyfin through a VPN is covered.
 
 It is bare-metal, not using any Dockers, so networking performance for 10gbit servers doesn't suffer, and it is also hardened to CIS level 1 for servers.
 
@@ -21,9 +21,9 @@ For public (no VPN) and private trackers: https://hostingby.design/dedi-lsw-nl/[
 
 For private trackers (can be used on public trackers with a VPN): Hetzner's https://www.hetzner.com/sb/#cpuType=Intel&additional=iNIC&location=FSN[Auction House dedicated servers] are preferred as it provides the best value; you get powerful hardware, a truly unlimited 1gbps line that is shared with nobody else, and good peering/routing.
 
-For Hetzner, be sure to select an Intel CPU as it has an iGPU, which is useful for Plex, Emby, or Jellyfin; avoid Xeons, they have worse IPC which will impact libtorrent's performance -- the most critical part of qBittorrent, as it's effectively an interface for libttorrent.
+For Hetzner, be sure to select an Intel CPU as it has an iGPU, which is useful for Jellyfin or Emby; avoid Xeons, they have worse IPC which will impact libtorrent's performance -- the most critical part of qBittorrent, as it's effectively an interface for libttorrent.
 
-* AMD CPUs are better value if you never use streaming services (Plex, Emby, or Jellyfin).
+* AMD CPUs are better value if you never use streaming services (Jellyfin or Emby).
 
 * Select the FSN or NBG location for better peering, and use an Intel iNIC as it uses less CPU than alternative network cards, and can handle a high number of global connections via libtorrent.
 
@@ -135,12 +135,12 @@ Now we automatically harden: +
 
 NOTE: If it freezes at configuring https://en.wikipedia.org/wiki/Advanced_Intrusion_Detection_Environment[AIDE], press kbd:[Ctrl + c] to exit out of ansible-playbook then run: `sudo ansible-playbook ~/harden.yml --skip-tags "aide"`
 
-TIP: You can optionally edit the `Port` from `/etc/ssh/sshd_config` if you plan to hide your server behind a VPN for Plex or public tracker usage. +
+TIP: You can optionally edit the `Port` from `/etc/ssh/sshd_config` if you plan to hide your server behind a VPN for public tracker usage. +
 Be sure to run `sudo ufw allow YOUR_CUSTOM_SSH_PORT`, such as `sudo ufw allow 44718`.
 
 Sudo edit `/etc/default/grub`:
 
-* Remove `nomodeset` to allow the Intel iGPU to run, which is desirable for Plex, Emby, or Jellyfin.
+* Remove `nomodeset` to allow the Intel iGPU to run, which is desirable for Jellyfin or Emby.
 ** Also run: `sudo sed -i 's/^blacklist i915/#&/' /etc/modprobe.d/blacklist-hetzner.conf`
 
 * Add the kernel command line options from the https://kernsec.org/wiki/index.php/Kernel_Self_Protection_Project/Recommended_Settings#kernel_command_line_options[Kernel Self Protection Project], and include the x86_64 options too. I would recommend using the "slow" options at first, to see if your server can handle it.
@@ -225,9 +225,9 @@ vm.zone_reclaim_mode = 1
 
 NOTE: You can skip Swizzin installation if you already have it, for example, through hostingby.design's Swizzin OS template. +
 hostingby.design and Andy10gbit would in that case already have qBittorrent using libtorrent v1.2.x installed. +
-If you want Plex though, run `sudo box install plex`
+If you want Jellyfin though for video streaming, run `sudo box install jellyfin`
 
-.Install Swizzin, which are high-quality automation scripts to make administrating a seedbox easier; through which we *install qBittorrent and optionally Plex*
+.Install Swizzin, which are high-quality automation scripts to make administrating a seedbox easier; through which we *install qBittorrent and optionally Emby*
 [%collapsible]
 ====
 
@@ -242,7 +242,7 @@ Retreive then run Swizzin: +
 * panel
 * nginx
 * qbittorrent -> use the latest version
-* plex (only if you're streaming movies / TV shows)
+* jellyfin (only if you're streaming movies / TV shows)
 
 See https://swizzin.ltd/getting-started/box-basics[here] for how to interact with Swizzin after its installation.
 
@@ -413,7 +413,18 @@ Click the Gear icon to go into the settings.
 
 ====
 
-== 3. (Optional) Setting up a VPN for qBittorrent and Plex
+== 3. (Optional) Setting up Jellyfin
+
+Before running this command, make sure `sudo box install jellyfin` was already ran. +
+This command is to ensure the database isn't corrupted, which would result in a "502 Bad Gateway": +
+`sudo apt purge jellyfin jellyfin-server jellyfin-web jellyfin-ffmpeg7 && sudo box remove jellyfin && sudo box install jellyfin`
+
+Ensure Emby is not installed alongside Jellyfin, otherwise there'll be port conflicts!
+
+Now during the setup of Jellyfin, your movies directory would likely be `/home/user01/torrents/qbittorrent` (replace user01 with your username).
+
+
+== 4. (Optional) Setting up a VPN for qBittorrent
 
 This is to avoid complaints to Hetzner that would get your server shut down, which will always happen on public trackers, but are rare on private trackers.
 
@@ -473,9 +484,6 @@ Click the Gear icon to go into the settings.
 
 .*Advanced*
 * Network interface: wg0
-
-Now for Plex, go to the URL -- likely https://example.airdns.org:54321 (this must have its local port set to 32400), then click the wrench icon, go to Settings -> Remote Access, and make sure it looks similar to the following: +
-image:plex port.png[]
 
 ====
 
