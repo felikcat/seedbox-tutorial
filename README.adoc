@@ -37,7 +37,7 @@ If you're paranoid about DDoS attacks, get an OVH unmetered from https://www.ovh
 
 
 [[prerequisites]]
-== 1. Prerequisites
+== Prerequisites
 On Hetzner, format and install Debian 12 as RAID0 if applicable, as to not waste any storage and increase drive speeds. Also ensure `/home` and `/` are not separate partitions, meaning only `/` is used, and make `/` a XFS partition instead of ext4.
 
 * It's preferred to backup externally, instead of relying on RAID1.
@@ -313,7 +313,7 @@ Restart the server to apply our GRUB and sysctl changes: +
 `sudo systemctl reboot`
 
 [[qbittorrent-setup]]
-== 2. Setting up qBittorrent
+== Setting up qBittorrent
 Open the Swizzin panel, which should be on the root of your IP such as https://EXAMPLE_EXTERNAL_IP.
 
 Click the Gear icon to go into the settings.
@@ -418,7 +418,7 @@ Click the Gear icon to go into the settings.
 ====
 
 [[jellyfin-setup]]
-== 3. (Optional) Setting up Jellyfin
+== (Optional) Setting up Jellyfin
 
 Before running this command, make sure `sudo box install jellyfin` was already ran. +
 This command is to ensure the database isn't corrupted, which would result in a "502 Bad Gateway": +
@@ -430,7 +430,7 @@ Now during the setup of Jellyfin, your movies directory would likely be `/home/u
 
 
 [[vpn-setup]]
-== 4. (Optional) Setting up a VPN for qBittorrent
+== (Optional) Setting up a VPN for qBittorrent
 
 This is to avoid complaints to Hetzner that would get your server shut down, which will always happen on public trackers, but are rare on private trackers.
 
