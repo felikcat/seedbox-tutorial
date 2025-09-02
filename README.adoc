@@ -1,5 +1,8 @@
 :experimental:
 :imagesdir: images
+:toc:
+:toclevels: 4
+:sectnums:
 ifdef::env-github[]
 :icons:
 :tip-caption: :bulb:
@@ -9,6 +12,7 @@ ifdef::env-github[]
 :warning-caption: :warning:
 endif::[]
 
+[[about]]
 == About
 This is a minimalist Debian 12 (preferred) or Ubuntu Server seedbox setup that is oriented around fast and stable seeding, for both private and public trackers. Optionally, setting up qBittorent and Jellyfin through a VPN is covered.
 
@@ -32,6 +36,7 @@ If you're paranoid about DDoS attacks, get an OVH unmetered from https://www.ovh
 ====
 
 
+[[prerequisites]]
 == 1. Prerequisites
 On Hetzner, format and install Debian 12 as RAID0 if applicable, as to not waste any storage and increase drive speeds. Also ensure `/home` and `/` are not separate partitions, meaning only `/` is used, and make `/` a XFS partition instead of ext4.
 
@@ -94,7 +99,7 @@ Ensure security updates are automatically downloaded and installed: +
 `dpkg-reconfigure unattended-upgrades`
 
 Sudo edit `/etc/fstab` and add "noatime" to the ext4 or XFS partition: +
-image:fstab.png[]
+image:fstab.png[Fstab configuration with noatime]
 
 // Do this before hardening via dev-sec, otherwise they'll be locked out.
 .*Setting up SSH key authentication:*
@@ -307,6 +312,7 @@ Remove `/storage/` if not applicable.
 Restart the server to apply our GRUB and sysctl changes: +
 `sudo systemctl reboot`
 
+[[qbittorrent-setup]]
 == 2. Setting up qBittorrent
 Open the Swizzin panel, which should be on the root of your IP such as https://EXAMPLE_EXTERNAL_IP.
 
@@ -411,6 +417,7 @@ Click the Gear icon to go into the settings.
 
 ====
 
+[[jellyfin-setup]]
 == 3. (Optional) Setting up Jellyfin
 
 Before running this command, make sure `sudo box install jellyfin` was already ran. +
@@ -422,6 +429,7 @@ Ensure Emby is not installed alongside Jellyfin, otherwise there'll be port conf
 Now during the setup of Jellyfin, your movies directory would likely be `/home/user01/torrents/qbittorrent` (replace user01 with your username).
 
 
+[[vpn-setup]]
 == 4. (Optional) Setting up a VPN for qBittorrent
 
 This is to avoid complaints to Hetzner that would get your server shut down, which will always happen on public trackers, but are rare on private trackers.
@@ -485,6 +493,7 @@ Click the Gear icon to go into the settings.
 
 ====
 
+[[tips]]
 == Tips
 Check your successful server logins occassionally with: +
 `sudo last -w -F`
@@ -498,6 +507,7 @@ Reload an AppArmor profile after changing it: +
 Monitor system resources live; run without `sudo` to view the current user's processes only: +
 `sudo htop`
 
+[[private-tracker-tips]]
 == Private tracker tips
 .*Myanonamouse*
 
@@ -505,8 +515,9 @@ Setting a dynamic seedbox IP: +
 
 Your username -> Preferences -> Security -> Create session with the IP -> go back to Security -> then click "Allow session to set dynamic seedbox IP": +
 image:MAM allow dynamic.png[] +
-image:MAM cookie.png[]
+image:MAM cookie.png[MAM cookie configuration]
 
+[[file-transfers]]
 == File transfers / backups
 There are three good options, two graphical, one command-line, depending on what you're comfortable with.
 
@@ -518,7 +529,7 @@ There are three good options, two graphical, one command-line, depending on what
 
 .https://filezilla-project.org/[FileZilla]
 - This is the fastest SFTP client for downloads; given the following option is set to 10: +
-image:simultaneous transfers.png[]
+image:simultaneous transfers.png[Simultaneous transfers setting in FileZilla]
 
 == Command-line
 
@@ -526,6 +537,7 @@ image:simultaneous transfers.png[]
 - On the server (example is of moving all files under `/home/EXAMPLE_USER/torrents/qbittorrent/` to IP 31.3.3.7 on SSH port 6969): + 
 `rsync --progress -atvz /home/EXAMPLE_USER/torrents/qbittorrent/* -e 'ssh -p 6969' EXAMPLE_USER@31.3.3.7:/home/EXAMPLE_USER/torrents/qbittorrent`
 
+[[appendices]]
 == Appendices
 
 .Learning resources used
