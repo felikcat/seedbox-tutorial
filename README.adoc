@@ -96,7 +96,7 @@ TIP: *irqbalance* balances interrupts across CPU cores to handle high load more 
 `sudo apt update`
 
 Ensure security updates are automatically downloaded and installed: +
-`dpkg-reconfigure unattended-upgrades`
+`sudo dpkg-reconfigure unattended-upgrades`
 
 Sudo edit `/etc/fstab` and add "noatime" to the ext4 or XFS partition: +
 image:fstab.png[Fstab configuration with noatime]
