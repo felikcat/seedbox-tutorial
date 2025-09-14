@@ -14,7 +14,7 @@ endif::[]
 
 [[about]]
 == About
-This is a minimalist Debian 12 (preferred) or Ubuntu Server seedbox setup that is oriented around fast and stable seeding, for both private and public trackers. Optionally, setting up qBittorent and Jellyfin through a VPN is covered.
+This is a minimalist Debian 12 or Ubuntu Server 24.04 (preferred) seedbox setup that is oriented around fast and stable seeding, for both private and public trackers. Optionally, setting up qBittorent and Jellyfin through a VPN is covered.
 
 It is bare-metal, not using any Dockers, so networking performance for 10gbit servers doesn't suffer, and it is also hardened to CIS level 1 for servers.
 
@@ -60,13 +60,36 @@ Login to 'server' and test if sudo works (it should output -> root): +
 
 The 'server' user is now going to be used instead of using 'root' directly.
 
-TIP: If you're using a laptop as a server, set `HandleLidSwitchExternalPower=ignore` in `/etc/systemd/logind.conf`; you can optionally set the other `HandleLidSwitch` options to `ignore` as well in case it's running temporarily off the battery during a power outage or other event. +
+// Do this before hardening via dev-sec, otherwise they'll be locked out.
+.*Setting up SSH key authentication:*
+. Run `ssh-keygen` on your local computer/PC, use the default location unless you already have an SSH key there (in that case, put it elsewhere and remember it), then set the passphrase to something moderately complex using a password manager like Bitwarden (be sure to save it in there too). I recommend at least 30 characters long, lower & upper case characters with numbers, and no symbols.
+
+. Run on the server for the 'server' user: +
+`mkdir -p ~/.ssh`
+
+. Include `-i /DIRECTORY/TO/YOUR/id_ed25519.pub` if you put a custom location and/or name (i.e. not id_ed25519.pub or id_rsa.pub): +
+`ssh-copy-id -p YOUR_SSH_PORT server@YOUR_SERVER_IP`
+- On Windows, use PowerShell and do this instead: `type C:\Users\$Env:UserName\.ssh\id_ed25519.pub | ssh -p YOUR_SSH_PORT server@YOUR_SERVER_IP 'cat >> ~/.ssh/authorized_keys'`
+
+. Check on the server to see if your key was installed successfully: +
+`cat ~/.ssh/authorized_keys`
+
+. Get the file contents of your id_ed25519 file (private key) and put it into Bitwarden (or other password manager), as you never want to lose this SSH key.
+
+. Login with only the SSH key for the 'server' user, and if it works, proceed with the next hardening step.
+
+.Enforce SSH key login only:
+----
+sudo sed -i -E \
+  -e 's/^#?PasswordAuthentication\s+.*/PasswordAuthentication no/' \
+  -e 's/^#?ChallengeResponseAuthentication\s+.*/ChallengeResponseAuthentication no/' \
+  /etc/ssh/sshd_config
+
+sudo systemctl restart ssh
+----
+
+NOTE: If you're using a laptop as a server, set `HandleLidSwitchExternalPower=ignore` in `/etc/systemd/logind.conf`; you can optionally set the other `HandleLidSwitch` options to `ignore` as well in case it's running temporarily off the battery during a power outage or other event. +
 Then run: `sudo systemctl restart systemd-logind`
-
-Remove Hetzner repositories, as it can make the OS lag behind in package updates, which is bad for security: +
-`sudo rm /etc/apt/sources.list.d/hetzner-security-updates.list; sudo rm /etc/apt/apt.conf.d/99hetzner`
-
-Sudo edit `/etc/apt/sources.list`, and remove all lines containing Hetzner. 
 
 TIP: *irqbalance* balances interrupts across CPU cores to handle high load more efficiently, which can prevent low networking performance. +
 *AppArmor* is to stop software from doing what they shouldn't, hence better security. +
@@ -76,12 +99,17 @@ TIP: *irqbalance* balances interrupts across CPU cores to handle high load more 
 *Fail2ban* is to make bruteforce password attacks on SSH and your web server (nginx) much more difficult. +
 *apt-transport-https* is to allow apt to operate over HTTPS to prevent security flaws such as https://justi.cz/security/2019/01/22/apt-rce.html[RCEs].
 
-`sudo apt update && sudo apt install irqbalance apparmor apparmor-utils auditd apparmor-notify unattended-upgrades apt-listchanges ufw fail2ban python3-systemd apt-transport-https ansible git`
+`sudo apt update && sudo apt install irqbalance apparmor apparmor-utils auditd apparmor-notify unattended-upgrades apt-listchanges ufw fail2ban python3-systemd apt-transport-https git`
 
-.*For Ubuntu:* Setting up kernel hotpatching support; to update the kernel automatically without rebooting.
+Ansible is unnecessary if using Ubuntu: +
+`sudo apt install ansible`
+
+.*For Ubuntu:* Setting up kernel hotpatching support, to update the kernel automatically without rebooting, and hardening with CIS level 1.
 . `sudo apt install ubuntu-advantage-tools`
 . You have to make an Ubuntu account to use Ubuntu Pro's functionality: +
 `sudo ua attach`
+. `sudo pro enable usg && sudo apt install usg`
+. `sudo usg fix cis_level1_server`
 
 .*For Debian:* +
 . I don't recommend this due to cost, but you can https://tuxcare.com/blog/how-to-try-or-purchase-kernelcare-2-different-ways/[purchase KernelCare+ Enterprise with LibCare] for $5.95 per server per month or $71 per server per year. KernelCare+ also hotpatches glibc and OpenSSL, which Ubuntu Pro doesn't cover.
@@ -101,24 +129,6 @@ Ensure security updates are automatically downloaded and installed: +
 Sudo edit `/etc/fstab` and add "noatime" to the ext4 or XFS partition: +
 image:fstab.png[Fstab configuration with noatime]
 
-// Do this before hardening via dev-sec, otherwise they'll be locked out.
-.*Setting up SSH key authentication:*
-. Run `ssh-keygen` on your local computer/PC, use the default location unless you already have an SSH key there (in that case, put it elsewhere and remember it), then set the passphrase to something moderately complex using a password manager like Bitwarden (be sure to save it in there too). I recommend at least 30 characters long, lower & upper case characters with numbers, and no symbols.
-
-. Run on the server for the 'server' user: +
-`mkdir -p ~/.ssh`
-
-. Include `-i /DIRECTORY/TO/YOUR/id_ed25519.pub` if you put a custom location and/or name (i.e. not id_ed25519.pub or id_rsa.pub): +
-`ssh-copy-id -p YOUR_SSH_PORT server@YOUR_SERVER_IP`
-- On Windows, use PowerShell and do this instead: `type C:\Users\$Env:UserName\.ssh\id_ed25519.pub | ssh -p YOUR_SSH_PORT server@YOUR_SERVER_IP 'cat >> ~/.ssh/authorized_keys'`
-
-. Check on the server to see if your key was installed successfully: +
-`cat ~/.ssh/authorized_keys`
-
-. Get the file contents of your id_ed25519 file (private key) and put it into Bitwarden (or other password manager), as you never want to lose this SSH key.
-
-. Login with only the SSH key for the 'server' user, and if it works, proceed with the next hardening step.
-
 .Setup the firewall:
 - `sudo ufw allow ssh && sudo ufw allow https` +
 For HBD servers that have a custom SSH port by default, run `sudo ufw allow 6969/tcp`. A custom SSH port is required if running the server through a VPN to prevent DMCA notices; you would edit the `Port` from `/etc/ssh/sshd_config` for this.
@@ -126,11 +136,10 @@ For HBD servers that have a custom SSH port by default, run `sudo ufw allow 6969
 - Complete the firewall setup: +
 `sudo ufw default deny incoming && sudo ufw default allow outgoing && sudo ufw enable`
 
-Install what we'll use to automatically harden: +
-`sudo ansible-galaxy install git+https://github.com/ansible-lockdown/DEBIAN12-CIS.git` +
-or `sudo ansible-galaxy install git+https://github.com/ansible-lockdown/UBUNTU24-CIS`
+.*For Debian:* Install what we'll use to automatically harden: +
+`sudo ansible-galaxy install git+https://github.com/ansible-lockdown/DEBIAN12-CIS.git`
 
-Edit: `~/harden.yml`; use UBUNTU24-CIS instead if running Ubuntu Server 24.04:
+- Edit: `~/harden.yml`:
 ```yaml
 - name: CIS level 1 server hardening
   hosts: localhost
@@ -140,7 +149,7 @@ Edit: `~/harden.yml`; use UBUNTU24-CIS instead if running Ubuntu Server 24.04:
         - level1-server
 ```
 
-Now we automatically harden: +
+- Now we automatically harden: +
 `sudo ansible-playbook ~/harden.yml --skip-tags "aide"`
 
 NOTE: You can try your luck at configuring https://en.wikipedia.org/wiki/Advanced_Intrusion_Detection_Environment[AIDE], but it's likely to freeze. If it does, press kbd:[Ctrl + c] to exit out of ansible-playbook: `sudo ansible-playbook ~/harden.yml`
