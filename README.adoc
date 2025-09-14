@@ -131,10 +131,12 @@ image:fstab.png[Fstab configuration with noatime]
 .Setup the firewall using Hetzner or OVH's console:
 - Allow incoming TCP port 22 (or your custom SSH port).
 - Allow incoming and outgoing TCP port 443.
+- Allow incoming TCP port 80 (only if using a custom domain, as Certbot uses it to verify the domain).
 
 NOTE: If you don't have a way to configure the firewall from your server provider, use UFW instead: + 
 `sudo apt install ufw` +
 `sudo ufw allow SSH_PORT_HERE/tcp` +
+`sudo ufw allow http` +
 `sudo ufw allow https` + 
 `sudo ufw default deny incoming && sudo ufw default allow outgoing && sudo ufw enable`
 
