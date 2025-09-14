@@ -95,11 +95,10 @@ TIP: *irqbalance* balances interrupts across CPU cores to handle high load more 
 *AppArmor* is to stop software from doing what they shouldn't, hence better security. +
 *auditd & apparmor-notify* is to allow viewing AppArmor logs, but also installing auditd allows AppArmor profiles to be created by you. +
 *Unattended upgrades* is so you don't accidentally forget to update packages, which would cause security issues. +
-*UFW* is a firewall management tool for blocking off unused ports. +
 *Fail2ban* is to make bruteforce password attacks on SSH and your web server (nginx) much more difficult. +
 *apt-transport-https* is to allow apt to operate over HTTPS to prevent security flaws such as https://justi.cz/security/2019/01/22/apt-rce.html[RCEs].
 
-`sudo apt update && sudo apt install irqbalance apparmor apparmor-utils auditd apparmor-notify unattended-upgrades apt-listchanges ufw fail2ban python3-systemd apt-transport-https git`
+`sudo apt update && sudo apt install irqbalance apparmor apparmor-utils auditd apparmor-notify unattended-upgrades apt-listchanges fail2ban python3-systemd apt-transport-https git`
 
 Ansible is unnecessary if using Ubuntu: +
 `sudo apt install ansible`
@@ -129,12 +128,17 @@ Ensure security updates are automatically downloaded and installed: +
 Sudo edit `/etc/fstab` and add "noatime" to the ext4 or XFS partition: +
 image:fstab.png[Fstab configuration with noatime]
 
-.Setup the firewall:
-- `sudo ufw allow ssh && sudo ufw allow https` +
-For HBD servers that have a custom SSH port by default, run `sudo ufw allow 6969/tcp`. A custom SSH port is required if running the server through a VPN to prevent DMCA notices; you would edit the `Port` from `/etc/ssh/sshd_config` for this.
+.Setup the firewall using Hetzner or OVH's console:
+- Allow incoming TCP port 22 (or your custom SSH port).
+- Allow incoming and outgoing TCP port 443.
 
-- Complete the firewall setup: +
+NOTE: If you don't have a way to configure the firewall from your server provider, use UFW instead: + 
+`sudo apt install ufw` +
+`sudo ufw allow SSH_PORT_HERE/tcp` +
+`sudo ufw allow https` + 
 `sudo ufw default deny incoming && sudo ufw default allow outgoing && sudo ufw enable`
+
+TIP: A custom SSH port is required if running the server through a VPN to prevent DMCA notices; you would edit the `Port` from `/etc/ssh/sshd_config` for this.
 
 .*For Debian:* Install what we'll use to automatically harden: +
 `sudo ansible-galaxy install git+https://github.com/ansible-lockdown/DEBIAN12-CIS.git`
