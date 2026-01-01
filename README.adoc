@@ -546,7 +546,7 @@ There are three good options, two graphical, one command-line, depending on what
 - This is the fastest SFTP client for downloads; given the following option is set to 10: +
 image:simultaneous transfers.png[Simultaneous transfers setting in FileZilla]
 
-== Command-line
+=== Command-line
 
 .rsync
 - On the server (example is of moving all files under `/home/EXAMPLE_USER/torrents/qbittorrent/` to IP 31.3.3.7 on SSH port 6969): + 
