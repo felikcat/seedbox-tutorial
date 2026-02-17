@@ -100,7 +100,7 @@ TIP: *irqbalance* balances interrupts across CPU cores to handle high load more 
 
 `sudo apt update && sudo apt install irqbalance apparmor apparmor-utils auditd apparmor-notify unattended-upgrades apt-listchanges fail2ban python3-systemd apt-transport-https git`
 
-Ansible is unnecessary if using Ubuntu: +
+Ansible is unnecessary if using Debian: +
 `sudo apt install ansible`
 
 .*For Ubuntu:* Setting up kernel hotpatching support, to update the kernel automatically without rebooting, and hardening with CIS level 1.
